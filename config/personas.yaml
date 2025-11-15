@@ -1,0 +1,62 @@
+# Persona Configuration for Agent Simulations
+#
+# Each persona represents a different type of user with specific characteristics,
+# goals, and expected outcomes. The simulator will create multiple conversations
+# for each persona based on the 'conversations' parameter.
+#
+# Required fields:
+#   - scenario: The situation or task the user is trying to accomplish
+#   - expected_outcome: What success looks like for this user
+#   - user_description: Characteristics and behavior of this user type
+#
+# Optional fields:
+#   - conversations: Number of conversations to simulate (default: 5)
+#   - max_turns: Maximum conversation turns for safety (default: 15)
+#   - context: Additional background context (optional)
+#   - chatbot_role: How the chatbot should behave (optional)
+
+personas:
+  busy_professional:
+    scenario: "User wants quick information about pricing and features"
+    expected_outcome: "Get clear pricing information and key feature highlights in under 5 messages"
+    user_description: "Time-poor professional who values concise, accurate answers. Expects direct responses without unnecessary elaboration. May become frustrated with long-winded explanations."
+    conversations: 8
+    max_turns: 10
+    context: "User is comparing multiple solutions and needs quick facts to make a decision"
+    chatbot_role: "Helpful product specialist who provides concise, accurate information"
+
+  confused_first_timer:
+    scenario: "New user trying to understand basic features and how to get started"
+    expected_outcome: "Gain clear understanding of core features and next steps to begin using the product"
+    user_description: "First-time user who is unfamiliar with technical jargon. Asks vague questions and may need clarification. Values patient, step-by-step guidance."
+    conversations: 6
+    max_turns: 15
+    context: "User has just signed up and is exploring the platform for the first time"
+    chatbot_role: "Patient onboarding assistant who explains things clearly without jargon"
+
+  technical_expert:
+    scenario: "Developer investigating API capabilities and integration options"
+    expected_outcome: "Obtain detailed technical information about API endpoints, authentication, and best practices"
+    user_description: "Experienced developer who asks specific technical questions. Values precise documentation, code examples, and advanced configuration options. Comfortable with technical terminology."
+    conversations: 5
+    max_turns: 12
+    context: "User is evaluating whether the API meets their integration requirements"
+    chatbot_role: "Technical support specialist with deep API knowledge"
+
+  frustrated_customer:
+    scenario: "Existing customer experiencing an issue and seeking urgent help"
+    expected_outcome: "Receive acknowledgment of the problem and clear steps to resolution"
+    user_description: "Unhappy customer who may be emotional or impatient. Needs empathy and quick action. May escalate if not handled well."
+    conversations: 5
+    max_turns: 10
+    context: "User has encountered a blocker that is preventing them from completing important work"
+    chatbot_role: "Empathetic support agent focused on quick problem resolution"
+
+  curious_researcher:
+    scenario: "Researcher exploring capabilities for potential use case"
+    expected_outcome: "Understand if the product can support their specific research needs and limitations"
+    user_description: "Methodical researcher who asks detailed questions about capabilities, limitations, and edge cases. Values thorough, accurate information over speed."
+    conversations: 4
+    max_turns: 18
+    context: "User is evaluating whether this tool fits their research methodology"
+    chatbot_role: "Knowledgeable consultant who can discuss advanced use cases"
