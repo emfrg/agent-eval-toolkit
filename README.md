@@ -85,17 +85,23 @@ Open `reports/summary.md` for results.
 
 ## Examples
 
-### Test with example agent
+### Test with the example adapter
+
 ```bash
-llm-evals-starter simulate --agent examples/example_agent.py
+# 1. Start the example agent service
+python examples/example_agent/run.py
+
+# 2. Run simulations (in another terminal)
+llm-evals-starter simulate --agent examples/example_agent_adapter.py
 ```
 
-### Use OpenAI adapter
-```bash
-llm-evals-starter simulate --agent examples/openai_agent_adapter.py
-```
+This demonstrates the recommended architecture:
 
-### Use your own
+- **Agent Service** (`examples/example_agent/`) - LangGraph agent with tool calling over HTTP
+- **Adapter** (`example_agent_adapter.py`) - HTTP client that converts service responses to Turn objects
+
+### Use your own agent
+
 ```bash
 llm-evals-starter simulate --agent my_agent.py
 ```
@@ -144,6 +150,7 @@ See [src/metrics/custom_examples.py](src/metrics/custom_examples.py) for example
 ## CLI Reference
 
 ### simulate
+
 ```bash
 llm-evals-starter simulate --agent <path>
 
@@ -156,6 +163,7 @@ Options:
 ```
 
 ### evaluate
+
 ```bash
 llm-evals-starter evaluate
 
@@ -167,6 +175,7 @@ Options:
 ```
 
 ### quickstart
+
 ```bash
 llm-evals-starter quickstart
 
@@ -174,6 +183,7 @@ Runs complete demo with example agent
 ```
 
 ### validate-config
+
 ```bash
 llm-evals-starter validate-config [path]
 
@@ -187,8 +197,12 @@ Validates persona configuration
 ```
 llm-evals-starter/
 ├── examples/
-│   ├── example_agent.py           # Example agent for testing
-│   ├── openai_agent_adapter.py    # OpenAI integration
+│   ├── example_agent/             # Example LangGraph agent service
+│   │   ├── agent_service.py       # FastAPI application
+│   │   ├── agent.py               # LangGraph agent logic
+│   │   ├── tools.py               # Agent tools
+│   │   └── run.py                 # Service launcher
+│   ├── example_agent_adapter.py   # HTTP adapter for the service
 │   └── custom_metrics_example.py  # Custom metrics examples
 ├── config/
 │   ├── personas.yaml              # User personas
@@ -198,6 +212,7 @@ llm-evals-starter/
 │   ├── simulation/                # Conversation simulation
 │   ├── evaluation/                # LLM-as-a-judge
 │   └── metrics/                   # Custom metrics
+├── tests/                         # Test suite
 └── pyproject.toml
 ```
 
@@ -240,27 +255,12 @@ asyncio.run(main())
 
 ---
 
-## FAQ
-
-**Q: What does this cost?**
-A: Simulation is free with example agent. Evaluation costs ~$0.02-0.10 per conversation using GPT-4 as judge. For 100 conversations: ~$2-10.
-
-**Q: Do I need DeepEval?**
-A: Yes, this is built on DeepEval v3.0+. It's installed automatically.
-
-**Q: Can I use models other than OpenAI?**
-A: Yes! The agent callback can call any API. The judge currently uses OpenAI by default.
-
-**Q: How do I test without costs?**
-A: Use `--agent examples/example_agent.py` to simulate without API calls. You only pay for evaluation.
-
----
-
 ## Contributing
 
 PRs welcome! Areas of interest:
-- More agent adapters (Anthropic, Cohere, etc.)
-- Custom metrics
+
+- Standardized adapters pattern
+- Standardized custom metrics
 - Better reporting/visualizations
 
 ---
