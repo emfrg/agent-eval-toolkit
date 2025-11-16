@@ -1,19 +1,30 @@
-"""LangChain agent implementation using OpenAI models.
+"""LangGraph agent implementation using OpenAI models.
 
-This module creates and configures a LangChain agent that can use tools
+This module creates and configures a LangGraph agent that can use tools
 to answer user queries.
 """
 
 import os
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Literal
+from typing_extensions import TypedDict, Annotated
+import operator
+
 from langchain_openai import ChatOpenAI
-from langchain.agents import create_agent
+from langchain_core.messages import AnyMessage, SystemMessage, ToolMessage, HumanMessage, AIMessage
+from langgraph.graph import StateGraph, START, END
+
 from .tools import TOOLS
 from .models import Message, ToolCall
 
 
+# Define the state for the agent
+class MessagesState(TypedDict):
+    """State for the agent graph."""
+    messages: Annotated[List[AnyMessage], operator.add]
+
+
 class OpenAIAgent:
-    """Wrapper for LangChain OpenAI agent with tools."""
+    """Wrapper for LangGraph OpenAI agent with tools."""
 
     def __init__(
         self,
@@ -53,12 +64,63 @@ class OpenAIAgent:
             "Always be concise and helpful in your responses."
         )
 
-        # Create the agent with tools
-        self.agent = create_agent(
-            self.llm,
-            TOOLS,
-            system_prompt=system_prompt or self.default_system_prompt
-        )
+        self.system_prompt = system_prompt or self.default_system_prompt
+
+        # Build tools lookup
+        self.tools = TOOLS
+        self.tools_by_name = {tool.name: tool for tool in TOOLS}
+
+        # Bind tools to the model
+        self.model_with_tools = self.llm.bind_tools(TOOLS)
+
+        # Build the agent graph
+        self.agent = self._build_graph()
+
+    def _build_graph(self) -> StateGraph:
+        """Build the LangGraph agent graph."""
+
+        # Define the LLM call node
+        def llm_call(state: MessagesState) -> Dict[str, Any]:
+            """Call the LLM with tools."""
+            messages = [SystemMessage(content=self.system_prompt)] + state["messages"]
+            response = self.model_with_tools.invoke(messages)
+            return {"messages": [response]}
+
+        # Define the tool execution node
+        def tool_node(state: MessagesState) -> Dict[str, Any]:
+            """Execute tools based on the last message's tool calls."""
+            last_message = state["messages"][-1]
+            tool_messages = []
+
+            for tool_call in last_message.tool_calls:
+                tool = self.tools_by_name[tool_call["name"]]
+                observation = tool.invoke(tool_call["args"])
+                tool_messages.append(
+                    ToolMessage(
+                        content=str(observation),
+                        tool_call_id=tool_call["id"]
+                    )
+                )
+
+            return {"messages": tool_messages}
+
+        # Define routing logic
+        def should_continue(state: MessagesState) -> Literal["tool_node", END]:
+            """Determine whether to continue to tools or end."""
+            last_message = state["messages"][-1]
+            if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+                return "tool_node"
+            return END
+
+        # Build the graph
+        graph_builder = StateGraph(MessagesState)
+        graph_builder.add_node("llm_call", llm_call)
+        graph_builder.add_node("tool_node", tool_node)
+        graph_builder.add_edge(START, "llm_call")
+        graph_builder.add_conditional_edges("llm_call", should_continue, ["tool_node", END])
+        graph_builder.add_edge("tool_node", "llm_call")
+
+        return graph_builder.compile()
 
     async def chat(
         self,
@@ -76,51 +138,47 @@ class OpenAIAgent:
         Returns:
             Dictionary containing the response message, tool calls, and metadata
         """
-        # Convert history to LangChain message format
-        messages = []
-
-        if history:
-            for msg in history:
-                messages.append({
-                    "role": msg.role,
-                    "content": msg.content
-                })
-
-        # Add current user message
-        messages.append({
-            "role": "user",
-            "content": message
-        })
-
-        # Invoke the agent
         try:
-            # Stream the agent's response
-            tool_calls_made = []
+            # Convert history to LangChain message format
+            messages = []
+
+            if history:
+                for msg in history:
+                    if msg.role == "user":
+                        messages.append(HumanMessage(content=msg.content))
+                    elif msg.role == "assistant":
+                        messages.append(AIMessage(content=msg.content))
+
+            # Add current user message
+            messages.append(HumanMessage(content=message))
+
+            # Invoke the agent graph
+            result = await self.agent.ainvoke({"messages": messages})
+
+            # Extract the final response and all tool calls with results
             final_message = ""
+            tool_calls_made = []
 
-            # Run the agent
-            result = await self.agent.ainvoke({
-                "messages": messages
-            })
+            # First pass: Build map of tool_call_id -> result from ToolMessages
+            tool_results = {}
+            for msg in result["messages"]:
+                if isinstance(msg, ToolMessage):
+                    tool_results[msg.tool_call_id] = msg.content
 
-            # Extract the response
-            if "messages" in result and len(result["messages"]) > 0:
-                last_message = result["messages"][-1]
+            # Second pass: Extract tool calls from AIMessages and match with results
+            for msg in result["messages"]:
+                if isinstance(msg, AIMessage):
+                    # Always update final_message (last one wins)
+                    final_message = msg.content
 
-                # Get the final response content
-                if hasattr(last_message, "content"):
-                    final_message = last_message.content
-                elif isinstance(last_message, dict):
-                    final_message = last_message.get("content", "")
-
-                # Extract tool calls if any
-                if hasattr(last_message, "tool_calls"):
-                    for tool_call in last_message.tool_calls:
-                        tool_calls_made.append(ToolCall(
-                            name=tool_call.get("name", "unknown"),
-                            arguments=tool_call.get("args", {}),
-                            result=None  # Result is embedded in response
-                        ))
+                    # Collect tool calls with their results
+                    if hasattr(msg, "tool_calls") and msg.tool_calls:
+                        for tool_call in msg.tool_calls:
+                            tool_calls_made.append(ToolCall(
+                                name=tool_call.get("name", "unknown"),
+                                arguments=tool_call.get("args", {}),
+                                result=tool_results.get(tool_call["id"])
+                            ))
 
             return {
                 "message": final_message,
