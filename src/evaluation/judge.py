@@ -256,9 +256,18 @@ class JudgeEvaluator:
         for result in results:
             metrics = result["metric_scores"]
 
-            overall_score = metrics.get("Overall Quality", {}).get("score", 0.0)
-            completeness_score = metrics.get("ConversationCompletenessMetric", {}).get("score", 0.0)
-            relevancy_score = metrics.get("TurnRelevancyMetric", {}).get("score", 0.0)
+            # Use the actual metric names that DeepEval returns
+            overall_score = metrics.get("Overall Quality [Conversational GEval]", {}).get("score")
+            if overall_score is None:
+                overall_score = metrics.get("Overall Quality", {}).get("score")
+
+            completeness_score = metrics.get("Conversation Completeness", {}).get("score")
+            if completeness_score is None:
+                completeness_score = metrics.get("ConversationCompletenessMetric", {}).get("score")
+
+            relevancy_score = metrics.get("Turn Relevancy", {}).get("score")
+            if relevancy_score is None:
+                relevancy_score = metrics.get("TurnRelevancyMetric", {}).get("score")
 
             # Truncate scenario for display
             scenario = (
@@ -271,9 +280,9 @@ class JudgeEvaluator:
                 str(result["test_case_index"]),
                 scenario,
                 str(result["num_turns"]),
-                f"{overall_score:.2f}" if overall_score else "N/A",
-                f"{completeness_score:.2f}" if completeness_score else "N/A",
-                f"{relevancy_score:.2f}" if relevancy_score else "N/A",
+                f"{overall_score:.2f}" if overall_score is not None else "N/A",
+                f"{completeness_score:.2f}" if completeness_score is not None else "N/A",
+                f"{relevancy_score:.2f}" if relevancy_score is not None else "N/A",
                 "✓" if result["passed"] else "✗",
             )
 

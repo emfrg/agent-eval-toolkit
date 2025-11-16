@@ -6,7 +6,6 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from deepeval.test_case import ConversationalTestCase, Turn
-from deepeval.dataset import EvaluationDataset
 from rich.console import Console
 
 from src.core.types import LoggedTurn, AgentOutputAdapter
@@ -17,12 +16,12 @@ console = Console()
 class ConversationLogger:
     """Handles logging of conversations in multiple formats.
 
-    DeepEval natively supports JSON and CSV export, but many users prefer JSONL
-    for streaming and line-by-line processing. This logger provides both.
+    Provides both JSON and JSONL export using direct serialization for full control
+    over output format and to avoid DeepEval's dataset API limitations.
 
     Features:
-    - Save conversations as JSON (DeepEval native)
-    - Save conversations as JSONL (custom implementation)
+    - Save conversations as JSON array format
+    - Save conversations as JSONL (one conversation per line)
     - Optional output normalization via AgentOutputAdapter
     - Automatic directory creation
     - Rich metadata preservation
@@ -46,13 +45,18 @@ class ConversationLogger:
     def save_as_json(
         self,
         test_cases: List[ConversationalTestCase],
-        filename: Optional[str] = None
+        filename: Optional[str] = None,
+        include_metadata: bool = True
     ) -> Path:
-        """Save conversations as JSON using DeepEval's native format.
+        """Save conversations as JSON array format.
+
+        Uses direct JSON serialization to match the JSONL pattern.
+        The output is a JSON array of conversation objects.
 
         Args:
             test_cases: List of ConversationalTestCase objects
             filename: Optional custom filename (default: timestamped)
+            include_metadata: Include additional metadata in output
 
         Returns:
             Path: Path to the saved JSON file
@@ -61,18 +65,20 @@ class ConversationLogger:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"conversations_{timestamp}.json"
 
-        # Use DeepEval's EvaluationDataset for native JSON export
-        dataset = EvaluationDataset(test_cases=test_cases)
         output_path = self.output_dir / filename
 
-        # DeepEval's save_as method
-        dataset.save_as(
-            file_type="json",
-            directory=str(self.output_dir),
-            file_name=filename.replace('.json', '')  # DeepEval adds .json extension
-        )
+        # Convert all test cases to dictionaries
+        conversations = [
+            self._test_case_to_dict(test_case, include_metadata=include_metadata)
+            for test_case in test_cases
+        ]
+
+        # Write as JSON array
+        with open(output_path, 'w') as f:
+            json.dump(conversations, f, indent=2)
 
         console.print(f"[green]✓[/green] Saved JSON to: {output_path}")
+        console.print(f"   Total conversations: {len(test_cases)}")
         return output_path
 
     def save_as_jsonl(

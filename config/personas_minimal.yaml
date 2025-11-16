@@ -1,0 +1,20 @@
+# Minimal Persona Configuration for Quick Testing
+# This file contains a small set of personas for rapid testing of the evaluation pipeline
+
+personas:
+  quick_question_user:
+    scenario: "User wants to quickly understand what pricing plans are available"
+    expected_outcome: "User receives clear information about pricing tiers and their features"
+    user_description: "A casual user who asks direct questions and expects concise answers. Not very technical."
+    conversations: 2
+    max_turns: 6
+    chatbot_role: "A helpful customer support assistant for a SaaS product"
+
+  technical_user:
+    scenario: "Developer wants to know technical details about API integration"
+    expected_outcome: "User gets relevant technical information and documentation guidance"
+    user_description: "A software developer who asks specific technical questions and expects detailed, accurate answers"
+    conversations: 2
+    max_turns: 8
+    context: "User is evaluating the product for a new project"
+    chatbot_role: "A knowledgeable technical support assistant"

@@ -26,7 +26,7 @@ load_dotenv()
 app = typer.Typer(
     name="llm-evals-starter",
     help="AI Agent Conversation Simulator & Evaluator - Built on DeepEval",
-    add_completion=False
+    add_completion=False,
 )
 console = Console()
 
@@ -67,7 +67,9 @@ def load_agent_callback(agent_path: str) -> Callable:
 
         if not hasattr(module, function_name):
             console.print(f"[red]Error:[/red] Function '{function_name}' not found in {file_path}")
-            console.print(f"[yellow]Hint:[/yellow] Make sure your file exports a function named '{function_name}'")
+            console.print(
+                f"[yellow]Hint:[/yellow] Make sure your file exports a function named '{function_name}'"
+            )
             raise typer.Exit(1)
 
         callback = getattr(module, function_name)
@@ -78,7 +80,9 @@ def load_agent_callback(agent_path: str) -> Callable:
 
         if not inspect.iscoroutinefunction(callback):
             console.print(f"[red]Error:[/red] '{function_name}' must be an async function")
-            console.print(f"[yellow]Hint:[/yellow] Use 'async def {function_name}(...)' in your agent file")
+            console.print(
+                f"[yellow]Hint:[/yellow] Use 'async def {function_name}(...)' in your agent file"
+            )
             raise typer.Exit(1)
 
         console.print(f"[green]✓[/green] Loaded agent callback: {function_name} from {file_path}")
@@ -87,6 +91,7 @@ def load_agent_callback(agent_path: str) -> Callable:
     except Exception as e:
         console.print(f"[red]Error loading agent:[/red] {e}")
         import traceback
+
         console.print(traceback.format_exc())
         raise typer.Exit(1)
 
@@ -97,31 +102,19 @@ def simulate(
         ...,
         "--agent",
         "-a",
-        help="Path to your agent file (e.g., my_agent.py or examples/example_agent.py)"
+        help="Path to your agent file (e.g., my_agent.py or examples/example_agent.py)",
     ),
     config: str = typer.Option(
-        "config/personas.yaml",
-        "--config",
-        "-c",
-        help="Path to personas YAML configuration file"
+        "config/personas.yaml", "--config", "-c", help="Path to personas YAML configuration file"
     ),
     output_dir: str = typer.Option(
-        "logs",
-        "--output",
-        "-o",
-        help="Directory to save conversation logs"
+        "logs", "--output", "-o", help="Directory to save conversation logs"
     ),
     format: str = typer.Option(
-        "jsonl",
-        "--format",
-        "-f",
-        help="Output format: json, jsonl, or both"
+        "jsonl", "--format", "-f", help="Output format: json, jsonl, or both"
     ),
     max_concurrent: Optional[int] = typer.Option(
-        None,
-        "--max-concurrent",
-        "-m",
-        help="Maximum concurrent simulations"
+        None, "--max-concurrent", "-m", help="Maximum concurrent simulations"
     ),
 ):
     """Run conversation simulations with your agent.
@@ -130,18 +123,19 @@ def simulate(
         llm-evals-starter simulate --agent examples/example_agent.py
         llm-evals-starter simulate --agent my_agent.py
     """
-    console.print(Panel.fit(
-        "[bold blue]AI Agent Conversation Simulator[/bold blue]\n"
-        "Running simulations...",
-        border_style="blue"
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]AI Agent Conversation Simulator[/bold blue]\n" "Running simulations...",
+            border_style="blue",
+        )
+    )
 
     try:
         # Validate configuration
         console.print(f"\n[cyan]Validating configuration:[/cyan] {config}")
         validation = validate_persona_config(config)
 
-        if not validation['valid']:
+        if not validation["valid"]:
             console.print(f"[red]✗ Configuration error:[/red] {validation['error']}")
             raise typer.Exit(1)
 
@@ -159,10 +153,7 @@ def simulate(
         agent_callback = load_agent_callback(agent)
 
         # Run simulations
-        runner = SimulationRunner(
-            agent_callback=agent_callback,
-            max_concurrent=max_concurrent
-        )
+        runner = SimulationRunner(agent_callback=agent_callback, max_concurrent=max_concurrent)
 
         async def run():
             result = await runner.run_simulations(goldens, persona_configs)
@@ -200,6 +191,7 @@ def simulate(
     except Exception as e:
         console.print(f"\n[red]✗ Unexpected error:[/red] {e}")
         import traceback
+
         console.print(traceback.format_exc())
         raise typer.Exit(1)
 
@@ -207,28 +199,19 @@ def simulate(
 @app.command()
 def evaluate(
     logs_dir: str = typer.Option(
-        "logs",
-        "--logs-dir",
-        "-l",
-        help="Directory containing conversation logs (JSONL)"
+        "logs", "--logs-dir", "-l", help="Directory containing conversation logs (JSONL)"
     ),
     output_dir: str = typer.Option(
-        "reports",
-        "--output",
-        "-o",
-        help="Directory to save evaluation reports"
+        "reports", "--output", "-o", help="Directory to save evaluation reports"
     ),
     judge_prompt: Optional[str] = typer.Option(
         "config/judge_prompt.md",
         "--prompt",
         "-p",
-        help="Path to custom judge prompt (markdown file)"
+        help="Path to custom judge prompt (markdown file)",
     ),
     threshold: float = typer.Option(
-        0.7,
-        "--threshold",
-        "-t",
-        help="Pass/fail threshold (0.0 to 1.0)"
+        0.7, "--threshold", "-t", help="Pass/fail threshold (0.0 to 1.0)"
     ),
 ):
     """Evaluate conversations using LLM-as-a-judge.
@@ -241,11 +224,12 @@ def evaluate(
     Example:
         llm-evals-starter evaluate --logs-dir logs --threshold 0.7
     """
-    console.print(Panel.fit(
-        "[bold blue]LLM-as-a-Judge Evaluation[/bold blue]\n"
-        "Evaluating conversations...",
-        border_style="blue"
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]LLM-as-a-Judge Evaluation[/bold blue]\n" "Evaluating conversations...",
+            border_style="blue",
+        )
+    )
 
     try:
         # Load conversations from logs
@@ -270,20 +254,15 @@ def evaluate(
 
         test_cases = []
         for conv in conversations:
-            turns = [
-                Turn(role=turn['role'], content=turn['content'])
-                for turn in conv['turns']
-            ]
+            turns = [Turn(role=turn["role"], content=turn["content"]) for turn in conv["turns"]]
 
             test_case = ConversationalTestCase(
-                scenario=conv['scenario'],
-                expected_outcome=conv['expected_outcome'],
-                turns=turns
+                scenario=conv["scenario"], expected_outcome=conv["expected_outcome"], turns=turns
             )
 
             # Add metadata if present
-            if 'metadata' in conv:
-                test_case.additional_metadata = conv['metadata']
+            if "metadata" in conv:
+                test_case.additional_metadata = conv["metadata"]
 
             test_cases.append(test_case)
 
@@ -292,7 +271,7 @@ def evaluate(
         # Initialize evaluator
         evaluator = JudgeEvaluator(
             custom_prompt_path=judge_prompt if Path(judge_prompt).exists() else None,
-            threshold=threshold
+            threshold=threshold,
         )
 
         # Run evaluation
@@ -304,8 +283,7 @@ def evaluate(
         # Generate reports
         report_gen = ReportGenerator(output_dir=output_dir)
         json_path, md_path = report_gen.generate_reports(
-            evaluation_results=results,
-            summary=summary
+            evaluation_results=results, summary=summary
         )
 
         console.print(f"\n[bold green]✨ Evaluation complete![/bold green]")
@@ -318,6 +296,7 @@ def evaluate(
     except Exception as e:
         console.print(f"\n[red]✗ Unexpected error:[/red] {e}")
         import traceback
+
         console.print(traceback.format_exc())
         raise typer.Exit(1)
 
@@ -325,10 +304,7 @@ def evaluate(
 @app.command()
 def quickstart(
     output_dir: str = typer.Option(
-        "quickstart_output",
-        "--output",
-        "-o",
-        help="Directory for all output (logs and reports)"
+        "quickstart_output", "--output", "-o", help="Directory for all output (logs and reports)"
     ),
 ):
     """Run a complete end-to-end demo.
@@ -343,11 +319,13 @@ def quickstart(
     Example:
         llm-evals-starter quickstart
     """
-    console.print(Panel.fit(
-        "[bold magenta]Quickstart Demo[/bold magenta]\n"
-        "Running complete simulation + evaluation pipeline",
-        border_style="magenta"
-    ))
+    console.print(
+        Panel.fit(
+            "[bold magenta]Quickstart Demo[/bold magenta]\n"
+            "Running complete simulation + evaluation pipeline",
+            border_style="magenta",
+        )
+    )
 
     try:
         # Create output directories
@@ -370,8 +348,8 @@ def quickstart(
         goldens, persona_configs = load_personas_from_yaml(str(personas_path))
         console.print(f"[green]✓[/green] Loaded {len(persona_configs)} personas")
 
-        example_agent_path = Path("examples/example_agent.py")
-        agent_callback = load_agent_callback(str(example_agent_path))
+        mock_agent_path = Path("examples/mock_agent.py")
+        agent_callback = load_agent_callback(str(mock_agent_path))
 
         runner = SimulationRunner(agent_callback=agent_callback)
 
@@ -397,7 +375,7 @@ def quickstart(
         judge_prompt_path = Path("config/judge_prompt.md")
         evaluator = JudgeEvaluator(
             custom_prompt_path=judge_prompt_path if judge_prompt_path.exists() else None,
-            threshold=0.7
+            threshold=0.7,
         )
 
         results = evaluator.evaluate_conversations(test_cases, verbose=True)
@@ -405,8 +383,7 @@ def quickstart(
 
         report_gen = ReportGenerator(output_dir=str(reports_dir))
         json_path, md_path = report_gen.generate_reports(
-            evaluation_results=results,
-            summary=summary
+            evaluation_results=results, summary=summary
         )
 
         console.print(f"\n[bold green]✨ Evaluation complete![/bold green]")
@@ -426,6 +403,7 @@ def quickstart(
     except Exception as e:
         console.print(f"\n[red]✗ Unexpected error:[/red] {e}")
         import traceback
+
         console.print(traceback.format_exc())
         raise typer.Exit(1)
 
@@ -433,8 +411,7 @@ def quickstart(
 @app.command()
 def validate_config(
     config: str = typer.Argument(
-        "config/personas.yaml",
-        help="Path to personas YAML configuration"
+        "config/personas.yaml", help="Path to personas YAML configuration"
     ),
 ):
     """Validate persona configuration file.
@@ -446,13 +423,13 @@ def validate_config(
 
     validation = validate_persona_config(config)
 
-    if validation['valid']:
+    if validation["valid"]:
         console.print(f"\n[bold green]✓ Configuration is valid![/bold green]\n")
         console.print(f"Total personas: {validation['total_personas']}")
         console.print(f"Total conversations: {validation['total_conversations']}\n")
 
         console.print("[bold]Persona breakdown:[/bold]")
-        for persona_name, details in validation['personas'].items():
+        for persona_name, details in validation["personas"].items():
             console.print(f"\n  [cyan]{persona_name}[/cyan]")
             console.print(f"    Conversations: {details['conversations']}")
             console.print(f"    Max turns: {details['max_turns']}")
@@ -467,6 +444,7 @@ def validate_config(
 def version():
     """Show version information."""
     from src import __version__
+
     console.print(f"AI Agent Conversation Simulator v{__version__}")
     console.print("Built on DeepEval")
 
