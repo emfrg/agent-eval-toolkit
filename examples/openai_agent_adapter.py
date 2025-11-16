@@ -5,14 +5,21 @@ simulation system. It demonstrates:
 1. Implementing the AgentCallback protocol
 2. Converting conversation history to OpenAI format
 3. Handling API responses
-4. Optional: Implementing tool/function calling
+4. Optional: Implementing tool calling (using latest tools parameter)
 5. Optional: Implementing AgentOutputAdapter for structured logging
+
+Note: This adapter uses the latest OpenAI API syntax with the 'tools' parameter
+instead of the deprecated 'functions' parameter. It supports parallel tool calling.
 """
 
 import os
 from typing import List, Dict, Any, Optional
 from deepeval.test_case import Turn
 from src.core.types import LoggedTurn, LoggedToolCall
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Note: Install openai package separately
 # pip install openai
@@ -55,29 +62,38 @@ class OpenAIAgentAdapter:
         self.temperature = temperature
         self.enable_functions = enable_functions
 
-        # Example function definitions (if enable_functions=True)
-        self.functions = [
+        # Example tool definitions (if enable_functions=True)
+        # Using new tools format instead of deprecated functions parameter
+        self.tools = [
             {
-                "name": "get_pricing_info",
-                "description": "Get pricing information for different plans",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "plan_name": {
-                            "type": "string",
-                            "description": "The name of the pricing plan (basic, pro, enterprise)",
-                        }
+                "type": "function",
+                "function": {
+                    "name": "get_pricing_info",
+                    "description": "Get pricing information for different plans",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "plan_name": {
+                                "type": "string",
+                                "description": "The name of the pricing plan (basic, pro, enterprise)",
+                            }
+                        },
+                        "required": ["plan_name"],
                     },
-                    "required": ["plan_name"],
                 },
             },
             {
-                "name": "search_documentation",
-                "description": "Search product documentation for specific topics",
-                "parameters": {
-                    "type": "object",
-                    "properties": {"query": {"type": "string", "description": "The search query"}},
-                    "required": ["query"],
+                "type": "function",
+                "function": {
+                    "name": "search_documentation",
+                    "description": "Search product documentation for specific topics",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {"type": "string", "description": "The search query"}
+                        },
+                        "required": ["query"],
+                    },
                 },
             },
         ]
@@ -110,8 +126,8 @@ class OpenAIAgentAdapter:
                     model=self.model,
                     messages=messages,
                     temperature=self.temperature,
-                    functions=self.functions,
-                    function_call="auto",
+                    tools=self.tools,
+                    tool_choice="auto",
                 )
             else:
                 response = await self.client.chat.completions.create(
@@ -121,29 +137,30 @@ class OpenAIAgentAdapter:
             # Extract response
             message = response.choices[0].message
 
-            # Handle function calls if present
-            if hasattr(message, "function_call") and message.function_call:
-                # In a real implementation, you would execute the function here
-                # For this example, we'll just return a response indicating the function call
-                function_name = message.function_call.name
-                function_args = message.function_call.arguments
+            # Handle tool calls if present (new API returns a list)
+            if hasattr(message, "tool_calls") and message.tool_calls:
+                # Add assistant's message with tool calls to history
+                messages.append(message)
 
-                # Simulate function execution
-                function_result = self._execute_function(function_name, function_args)
+                # Process each tool call (supports parallel calling)
+                for tool_call in message.tool_calls:
+                    function_name = tool_call.function.name
+                    function_args = tool_call.function.arguments
 
-                # Make another API call with the function result
-                messages.append(
-                    {
-                        "role": "assistant",
-                        "content": None,
-                        "function_call": {"name": function_name, "arguments": function_args},
-                    }
-                )
-                messages.append(
-                    {"role": "function", "name": function_name, "content": str(function_result)}
-                )
+                    # Simulate function execution
+                    function_result = self._execute_function(function_name, function_args)
 
-                # Get final response
+                    # Add tool result to messages (new format with tool_call_id)
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": function_name,
+                            "content": str(function_result),
+                        }
+                    )
+
+                # Get final response after all tool executions
                 final_response = await self.client.chat.completions.create(
                     model=self.model, messages=messages, temperature=self.temperature
                 )
@@ -202,7 +219,7 @@ async def agent_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
         model="gpt-4o",
         system_prompt="You are a helpful AI assistant.",
         temperature=0.7,
-        enable_functions=False
+        enable_functions=False,
     )
     return await adapter(input, turns, thread_id)
 
@@ -212,6 +229,7 @@ def openai_output_adapter(raw_response: Dict[str, Any]) -> LoggedTurn:
     """Convert OpenAI API response to LoggedTurn format.
 
     This would be used if you want structured logging with tool calls.
+    Updated to use new tool_calls format instead of deprecated function_call.
 
     Args:
         raw_response: Raw response from OpenAI API
@@ -219,18 +237,19 @@ def openai_output_adapter(raw_response: Dict[str, Any]) -> LoggedTurn:
     Returns:
         LoggedTurn: Normalized turn
     """
-    # Extract tool calls if present
+    # Extract tool calls if present (new API returns list)
     tool_calls = []
-    if "function_call" in raw_response:
+    if "tool_calls" in raw_response:
         import json
 
-        tool_calls.append(
-            LoggedToolCall(
-                name=raw_response["function_call"]["name"],
-                arguments=json.loads(raw_response["function_call"]["arguments"]),
-                result=None,  # Would be populated after function execution
+        for tool_call in raw_response["tool_calls"]:
+            tool_calls.append(
+                LoggedToolCall(
+                    name=tool_call["function"]["name"],
+                    arguments=json.loads(tool_call["function"]["arguments"]),
+                    result=None,  # Would be populated after tool execution
+                )
             )
-        )
 
     return LoggedTurn(
         role="assistant",
