@@ -1,23 +1,23 @@
-# OpenAI Agent Service
+# Example Agent Service
 
-This directory contains a **production-ready FastAPI service** that exposes a LangChain-powered OpenAI agent over HTTP. This demonstrates the **correct architectural pattern** for separating concerns:
+This directory contains a **reference FastAPI service** that exposes a LangGraph agent over HTTP. This demonstrates the **correct architectural pattern** for separating concerns:
 
-- **Service** (this directory): Handles OpenAI API calls, tool execution, business logic
-- **Adapter** (`service_agent_adapter.py`): Handles HTTP calls and format conversion
+- **Service** (this directory): Handles LLM API calls, tool execution, business logic
+- **Adapter** (`example_agent_adapter.py`): Handles HTTP calls and format conversion
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────┐
-│ Your Agent Service (FastAPI + LangChain)    │
-│ - OpenAI API integration                    │
-│ - Tool/function execution                   │
+│ Agent Service (FastAPI + LangGraph)         │
+│ - LLM API integration                       │
+│ - Tool execution                            │
 │ - Business logic                            │
 │ - Can be deployed independently             │
 └─────────────────────────────────────────────┘
                     ↓ HTTP
 ┌─────────────────────────────────────────────┐
-│ Service Adapter                             │
+│ Adapter                                     │
 │ - HTTP client                               │
 │ - Format conversion (JSON → Turn)           │
 │ - Error handling                            │
@@ -32,10 +32,11 @@ This directory contains a **production-ready FastAPI service** that exposes a La
 
 ## Files
 
-- **`openai_agent_service.py`**: FastAPI application with REST endpoints
-- **`agent.py`**: LangChain agent logic using latest `create_agent` API
+- **`agent_service.py`**: FastAPI application with REST endpoints
+- **`agent.py`**: LangGraph agent logic with StateGraph and tool calling
 - **`tools.py`**: Agent tools decorated with `@tool` (pricing info, docs search)
 - **`models.py`**: Pydantic models for request/response validation
+- **`run.py`**: Launcher script for the service
 - **`README.md`**: This file
 
 ## Installation
@@ -48,7 +49,8 @@ pip install -e ".[service]"
 ```
 
 This installs:
-- `langchain` & `langchain-openai` - Agent framework
+- `langgraph` - Agent framework with StateGraph
+- `langchain` & `langchain-openai` - Core LLM integration
 - `fastapi` & `uvicorn` - Web framework
 - `httpx` - HTTP client for the adapter
 
@@ -65,14 +67,14 @@ echo "OPENAI_API_KEY=sk-your-key-here" >> .env
 
 ```bash
 # From project root
-python examples/services/run.py
+python examples/example_agent/run.py
 ```
 
 The service will start at `http://localhost:5555` by default.
 
 To use a different port:
 ```bash
-PORT=3000 python examples/services/run.py
+PORT=3000 python examples/example_agent/run.py
 ```
 
 ### API Documentation
@@ -103,15 +105,15 @@ curl -X POST http://localhost:5555/chat \
 
 ```bash
 # Test the adapter
-python examples/service_agent_adapter.py
+python examples/example_agent_adapter.py
 ```
 
 #### Using the Framework:
 
 ```bash
-# Run simulations using the service adapter
+# Run simulations using the adapter
 llm-evals-starter simulate \
-  --agent examples/service_agent_adapter.py \
+  --agent examples/example_agent_adapter.py \
   --config config/personas.yaml
 ```
 
@@ -234,7 +236,7 @@ COPY . .
 RUN pip install -e ".[service]"
 
 EXPOSE 5555
-CMD ["uvicorn", "examples.services.openai_agent_service:app", "--host", "0.0.0.0", "--port", "5555"]
+CMD ["uvicorn", "examples.example_agent.agent_service:app", "--host", "0.0.0.0", "--port", "5555"]
 ```
 
 ### Environment Variables
@@ -275,7 +277,7 @@ export OPENAI_API_KEY=sk-your-key-here
 lsof -i :5555
 
 # Use a different port
-uvicorn examples.services.openai_agent_service:app --port 5556
+uvicorn examples.example_agent.agent_service:app --port 5556
 ```
 
 ## Why This Architecture?
@@ -293,8 +295,8 @@ uvicorn examples.services.openai_agent_service:app --port 5556
    - Service can be scaled independently
 
 3. **Technology Independence**
-   - Swap out LangChain for a different framework
-   - Replace OpenAI with another provider
+   - Swap out LangGraph for a different framework
+   - Replace OpenAI with another LLM provider
    - Adapter doesn't care about internals
 
 4. **Production Ready**

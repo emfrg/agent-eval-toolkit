@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Launcher script for the OpenAI agent service.
+"""Launcher script for the example agent service.
 
 This script runs the FastAPI service with sensible defaults:
 - Default port: 5555
@@ -7,10 +7,10 @@ This script runs the FastAPI service with sensible defaults:
 - Can override with environment variables
 
 Usage:
-    python examples/services/run.py
+    python examples/example_agent/run.py
 
-    PORT=3000 python examples/services/run.py
-    HOST=localhost python examples/services/run.py
+    PORT=3000 python examples/example_agent/run.py
+    HOST=localhost python examples/example_agent/run.py
 """
 
 import os
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     print(f"""
 ╔══════════════════════════════════════════════════════════════════╗
-║              OpenAI Agent Service                                 ║
+║              Example Agent Service                                ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║                                                                   ║
 ║  Starting service...                                              ║
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 """)
 
     uvicorn.run(
-        "examples.services.openai_agent_service:app",
+        "examples.example_agent.agent_service:app",
         host=HOST,
         port=PORT,
         reload=True,

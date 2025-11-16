@@ -1,10 +1,10 @@
-"""FastAPI service for the OpenAI agent.
+"""FastAPI service for the example agent.
 
-This service exposes the LangChain agent over HTTP endpoints, allowing
+This service exposes a LangGraph agent over HTTP endpoints, allowing
 clients to interact with the agent via REST API calls.
 
 Run with:
-    python examples/services/run.py
+    python examples/example_agent/run.py
 """
 
 import os
@@ -20,8 +20,8 @@ load_dotenv()
 
 # Create FastAPI app
 app = FastAPI(
-    title="OpenAI Agent Service",
-    description="LangChain-powered OpenAI agent with tool calling capabilities",
+    title="Example Agent Service",
+    description="LangGraph-powered agent with tool calling capabilities",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
