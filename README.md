@@ -21,7 +21,14 @@ cd llm-evals-starter
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
+# core
 pip install -e .
+
+# for the example service
+pip install -e ".[service]"
+
+# for tests (optional)
+pip install -e ".[dev]"
 ```
 
 ### 2. Set up environment
@@ -49,17 +56,16 @@ This runs a complete simulation + evaluation with an example agent. Check `quick
 
 This framework supports two integration patterns:
 
-1. **Service + Adapter Pattern (Recommended for production)**:
+1. **Service + Adapter Pattern (for existing projects)**:
+
    - Your agent runs as a separate service (FastAPI, Flask, etc.)
    - Create an adapter file that connects to your service
-   - Benefits: Separation of concerns, easier deployment, technology agnostic
    - Example: `examples/example_agent/` (service) + `example_agent_adapter.py` (adapter)
 
-2. **Standalone Pattern (Simple, good for prototypes)**:
+2. **Standalone Pattern**:
    - All agent logic in a single file
    - Direct API calls within the callback function
-   - Benefits: Simple, self-contained, easy to test
-   - Example: `examples/mock_agent.py`
+   - Example: `examples/mock_agent.py` (mock for demonstration)
 
 ### Step 1: Create your agent adapter
 
@@ -200,19 +206,11 @@ Options:
 
 ### quickstart
 
-```bash
-llm-evals-starter quickstart
-
 Runs complete demo with mock agent
 NOTE: simulated users and judge still use API calls
-```
-
-### validate-config
 
 ```bash
-llm-evals-starter validate-config [path]
-
-Validates persona configuration
+llm-evals-starter quickstart
 ```
 
 ---
