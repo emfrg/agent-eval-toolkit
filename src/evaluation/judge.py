@@ -334,15 +334,18 @@ class JudgeEvaluator:
                 persona_stats[persona]["passed"] += 1
 
             # Collect overall quality score
-            overall_score = result["metric_scores"].get("Overall Quality", {}).get("score")
+            overall_score = result["metric_scores"].get("Overall Quality [Conversational GEval]", {}).get("score")
             if overall_score is not None:
                 persona_stats[persona]["scores"].append(overall_score)
 
         # Calculate averages per persona
         for persona, stats in persona_stats.items():
+            # Always calculate pass_rate
+            stats["pass_rate"] = stats["passed"] / stats["total"] if stats["total"] > 0 else 0
+
+            # Calculate average score if available
             if stats["scores"]:
                 stats["average_score"] = sum(stats["scores"]) / len(stats["scores"])
-                stats["pass_rate"] = stats["passed"] / stats["total"] if stats["total"] > 0 else 0
             del stats["scores"]  # Remove raw scores from summary
 
         return {

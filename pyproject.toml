@@ -37,8 +37,9 @@ service = [
 [project.scripts]
 llm-evals-starter = "src.cli:app"
 
-[tool.setuptools]
-packages = ["src", "examples"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "examples*"]
 
 [build-system]
 requires = ["setuptools>=65.0", "wheel"]
