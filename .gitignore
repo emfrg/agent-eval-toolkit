@@ -55,5 +55,6 @@ Thumbs.db
 # Other
 my_notes.md
 quickstart_output/
+minimal_test_output/
 .deepeval
 MINIMAL_EVAL_GUIDE.md
