@@ -58,3 +58,6 @@ quickstart_output/
 minimal_test_output/
 .deepeval
 MINIMAL_EVAL_GUIDE.md
+
+my_judge.md
+my_personas.yaml

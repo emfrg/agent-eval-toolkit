@@ -3,7 +3,7 @@ name = "llm-evals-starter"
 version = "0.1.0"
 description = "Open-source harness for stress-testing AI agents with simulated users and LLM-as-a-judge evaluation, built on DeepEval"
 authors = [
-    {name = "Manos", email = "your-email@example.com"}
+    {name = "Manos", email = "m.frgdakis@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.9,<4.0"

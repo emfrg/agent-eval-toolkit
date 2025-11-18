@@ -29,6 +29,8 @@ pip install -e .
 ```bash
 cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
+# Required for: User simulation + LLM-as-a-judge evaluation
+# Note: The mock agent itself makes no API calls
 ```
 
 ### 3. Try the demo
@@ -43,32 +45,54 @@ This runs a complete simulation + evaluation with an example agent. Check `quick
 
 ## How to Use With Your Agent
 
-### Step 1: Create your agent file
+### Architecture Patterns
 
-Create `my_agent.py`:
+This framework supports two integration patterns:
+
+1. **Service + Adapter Pattern (Recommended for production)**:
+   - Your agent runs as a separate service (FastAPI, Flask, etc.)
+   - Create an adapter file that connects to your service
+   - Benefits: Separation of concerns, easier deployment, technology agnostic
+   - Example: `examples/example_agent/` (service) + `example_agent_adapter.py` (adapter)
+
+2. **Standalone Pattern (Simple, good for prototypes)**:
+   - All agent logic in a single file
+   - Direct API calls within the callback function
+   - Benefits: Simple, self-contained, easy to test
+   - Example: `examples/mock_agent.py`
+
+### Step 1: Create your agent adapter
+
+Create `my_agent_adapter.py` (following the recommended Service + Adapter pattern):
 
 ```python
 from typing import List
 from deepeval.test_case import Turn
-import requests
+import httpx
 
 async def agent_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
-    """Your agent integration - call your API here."""
+    """Adapter that connects your agent service to the eval framework."""
 
-    # Call your agent
-    response = requests.post("https://your-agent-api.com/chat", json={
-        "message": input,
-        "thread_id": thread_id,
-        "history": [{"role": t.role, "content": t.content} for t in turns]
-    })
+    # Connect to your agent service
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:8000/chat",  # Your agent service URL
+            json={
+                "message": input,
+                "thread_id": thread_id,
+                "history": [{"role": t.role, "content": t.content} for t in turns]
+            },
+            timeout=30.0
+        )
 
-    return Turn(role="assistant", content=response.json()["message"])
+        data = response.json()
+        return Turn(role="assistant", content=data["message"])
 ```
 
 ### Step 2: Run simulations
 
 ```bash
-llm-evals-starter simulate --agent my_agent.py
+llm-evals-starter simulate --agent my_agent_adapter.py
 ```
 
 ### Step 3: Evaluate
@@ -103,7 +127,7 @@ This demonstrates the recommended architecture:
 ### Use your own agent
 
 ```bash
-llm-evals-starter simulate --agent my_agent.py
+llm-evals-starter simulate --agent my_agent_adapter.py
 ```
 
 ---
@@ -179,7 +203,8 @@ Options:
 ```bash
 llm-evals-starter quickstart
 
-Runs complete demo with example agent
+Runs complete demo with mock agent
+NOTE: simulated users and judge still use API calls
 ```
 
 ### validate-config
