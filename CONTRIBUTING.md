@@ -22,7 +22,7 @@ Found a bug or have a feature request? Please open an issue on GitHub with:
 3. **Make your changes**
 4. **Test your changes**
    ```bash
-   python -m src.cli quickstart
+   llm-evals-starter quickstart
    ```
 5. **Commit with clear messages**
    ```bash
@@ -128,8 +128,8 @@ class MyMetric(BaseMetric):
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/ai-agent-conversation-sim.git
-cd ai-agent-conversation-sim
+git clone https://github.com/emfrg/llm-evals-starter.git
+cd llm-evals-starter
 
 # Create virtual environment
 python -m venv .venv
@@ -143,7 +143,7 @@ pip install -e ".[dev]"
 python -m pytest
 
 # Run quickstart to verify
-python -m src.cli quickstart
+llm-evals-starter quickstart
 ```
 
 ## Testing
@@ -152,8 +152,8 @@ Before submitting a PR, ensure:
 
 1. **Code runs without errors**
    ```bash
-   python -m src.cli validate-config config/personas.yaml
-   python -m src.cli quickstart
+   llm-evals-starter validate-config config/personas.yaml
+   llm-evals-starter quickstart
    ```
 
 2. **No breaking changes** (unless discussed in issue)
