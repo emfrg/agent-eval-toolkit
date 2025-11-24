@@ -39,7 +39,7 @@ class ReportGenerator:
         self,
         evaluation_results: List[Dict[str, Any]],
         summary: Dict[str, Any],
-        report_name: Optional[str] = None
+        report_name: Optional[str] = None,
     ) -> tuple[Path, Path]:
         """Generate both JSON and Markdown reports.
 
@@ -57,16 +57,12 @@ class ReportGenerator:
 
         # Generate JSON report
         json_path = self.save_json_report(
-            evaluation_results,
-            summary,
-            filename=f"{report_name}.json"
+            evaluation_results, summary, filename=f"{report_name}.json"
         )
 
         # Generate Markdown report
         markdown_path = self.save_markdown_report(
-            evaluation_results,
-            summary,
-            filename=f"{report_name}.md"
+            evaluation_results, summary, filename=f"{report_name}.md"
         )
 
         console.print(f"\n[bold green]✓ Reports generated![/bold green]")
@@ -79,7 +75,7 @@ class ReportGenerator:
         self,
         evaluation_results: List[Dict[str, Any]],
         summary: Dict[str, Any],
-        filename: str = "report_raw.json"
+        filename: str = "report_raw.json",
     ) -> Path:
         """Save detailed results as JSON.
 
@@ -96,10 +92,10 @@ class ReportGenerator:
         report_data = {
             "generated_at": datetime.now().isoformat(),
             "summary": summary,
-            "detailed_results": evaluation_results
+            "detailed_results": evaluation_results,
         }
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(report_data, f, indent=2)
 
         return output_path
@@ -108,7 +104,7 @@ class ReportGenerator:
         self,
         evaluation_results: List[Dict[str, Any]],
         summary: Dict[str, Any],
-        filename: str = "summary.md"
+        filename: str = "summary.md",
     ) -> Path:
         """Save human-readable Markdown report.
 
@@ -127,20 +123,15 @@ class ReportGenerator:
         """
         output_path = self.output_dir / filename
 
-        markdown_content = self._generate_markdown_content(
-            evaluation_results,
-            summary
-        )
+        markdown_content = self._generate_markdown_content(evaluation_results, summary)
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write(markdown_content)
 
         return output_path
 
     def _generate_markdown_content(
-        self,
-        evaluation_results: List[Dict[str, Any]],
-        summary: Dict[str, Any]
+        self, evaluation_results: List[Dict[str, Any]], summary: Dict[str, Any]
     ) -> str:
         """Generate the markdown content for the report."""
         lines = []
@@ -162,10 +153,10 @@ class ReportGenerator:
         lines.append("")
 
         # Metric Averages
-        if summary.get('metric_averages'):
+        if summary.get("metric_averages"):
             lines.append("## 📈 Metric Averages")
             lines.append("")
-            for metric_name, stats in summary['metric_averages'].items():
+            for metric_name, stats in summary["metric_averages"].items():
                 lines.append(f"### {metric_name}")
                 lines.append("")
                 lines.append(f"- **Average Score:** {stats['average']:.3f}")
@@ -175,23 +166,23 @@ class ReportGenerator:
                 lines.append("")
 
         # Persona-level Statistics
-        if summary.get('persona_statistics'):
+        if summary.get("persona_statistics"):
             lines.append("## 👥 Performance by Persona")
             lines.append("")
 
-            for persona_name, stats in summary['persona_statistics'].items():
+            for persona_name, stats in summary["persona_statistics"].items():
                 lines.append(f"### {persona_name}")
                 lines.append("")
                 lines.append(f"- **Conversations:** {stats['total']}")
                 lines.append(f"- **Pass Rate:** {stats.get('pass_rate', 0)*100:.1f}%")
 
-                if 'average_score' in stats:
+                if "average_score" in stats:
                     lines.append(f"- **Average Score:** {stats['average_score']:.3f}")
 
                 # Determine strengths vs weaknesses
-                if stats.get('pass_rate', 0) >= 0.8:
+                if stats.get("pass_rate", 0) >= 0.8:
                     lines.append("- **Status:** ✅ Strong performance")
-                elif stats.get('pass_rate', 0) >= 0.6:
+                elif stats.get("pass_rate", 0) >= 0.6:
                     lines.append("- **Status:** ⚠️ Moderate performance")
                 else:
                     lines.append("- **Status:** ❌ Needs improvement")
@@ -199,11 +190,7 @@ class ReportGenerator:
                 lines.append("")
 
                 # Add insights based on results
-                insights = self._generate_persona_insights(
-                    persona_name,
-                    stats,
-                    evaluation_results
-                )
+                insights = self._generate_persona_insights(persona_name, stats, evaluation_results)
                 if insights:
                     lines.append("**Key Insights:**")
                     for insight in insights:
@@ -215,44 +202,53 @@ class ReportGenerator:
         lines.append("")
 
         # Top 5 failures
-        failures = [r for r in evaluation_results if not r['passed']]
+        failures = [r for r in evaluation_results if not r["passed"]]
         if failures:
             lines.append("### ❌ Top Failures")
             lines.append("")
             for i, result in enumerate(failures[:5], 1):
-                scenario = result['scenario'][:60] + "..." if len(result['scenario']) > 60 else result['scenario']
+                scenario = (
+                    result["scenario"][:60] + "..."
+                    if len(result["scenario"]) > 60
+                    else result["scenario"]
+                )
                 lines.append(f"{i}. **{scenario}**")
                 lines.append(f"   - Turns: {result['num_turns']}")
 
                 # Show which metrics failed
                 failed_metrics = [
                     f"{name} ({scores['score']:.2f})"
-                    for name, scores in result['metric_scores'].items()
-                    if not scores['passed']
+                    for name, scores in result["metric_scores"].items()
+                    if not scores["passed"]
                 ]
                 if failed_metrics:
                     lines.append(f"   - Failed metrics: {', '.join(failed_metrics)}")
                 lines.append("")
 
         # Top 5 successes
-        successes = [r for r in evaluation_results if r['passed']]
+        successes = [r for r in evaluation_results if r["passed"]]
         if successes:
             # Sort by average score
             successes_sorted = sorted(
                 successes,
                 key=lambda r: sum(
-                    s['score'] for s in r['metric_scores'].values() if s['score'] is not None
-                ) / len(r['metric_scores']),
-                reverse=True
+                    s["score"] for s in r["metric_scores"].values() if s["score"] is not None
+                )
+                / len(r["metric_scores"]),
+                reverse=True,
             )
 
             lines.append("### ✅ Top Successes")
             lines.append("")
             for i, result in enumerate(successes_sorted[:5], 1):
-                scenario = result['scenario'][:60] + "..." if len(result['scenario']) > 60 else result['scenario']
+                scenario = (
+                    result["scenario"][:60] + "..."
+                    if len(result["scenario"]) > 60
+                    else result["scenario"]
+                )
                 avg_score = sum(
-                    s['score'] for s in result['metric_scores'].values() if s['score'] is not None
-                ) / len(result['metric_scores'])
+                    s["score"] for s in result["metric_scores"].values() if s["score"] is not None
+                ) / len(result["metric_scores"])
 
                 lines.append(f"{i}. **{scenario}**")
                 lines.append(f"   - Turns: {result['num_turns']}")
@@ -270,31 +266,29 @@ class ReportGenerator:
         # Footer
         lines.append("---")
         lines.append("")
-        lines.append("*Generated by AI Agent Conversation Simulator & Evaluator*")
+        lines.append(
+            "*Generated by LLM Evals Starter (AI Agent Conversation Simulator & Evaluator)*"
+        )
         lines.append("")
 
         return "\n".join(lines)
 
     def _generate_persona_insights(
-        self,
-        persona_name: str,
-        stats: Dict[str, Any],
-        all_results: List[Dict[str, Any]]
+        self, persona_name: str, stats: Dict[str, Any], all_results: List[Dict[str, Any]]
     ) -> List[str]:
         """Generate insights for a specific persona."""
         insights = []
 
         # Get results for this persona
         persona_results = [
-            r for r in all_results
-            if r['metadata'].get('persona_name') == persona_name
+            r for r in all_results if r["metadata"].get("persona_name") == persona_name
         ]
 
         if not persona_results:
             return insights
 
         # Check conversation length patterns
-        avg_turns = sum(r['num_turns'] for r in persona_results) / len(persona_results)
+        avg_turns = sum(r["num_turns"] for r in persona_results) / len(persona_results)
         if avg_turns > 15:
             insights.append(f"Conversations tend to be lengthy (avg {avg_turns:.1f} turns)")
         elif avg_turns < 5:
@@ -303,17 +297,15 @@ class ReportGenerator:
         # Check metric patterns
         metric_scores = {}
         for result in persona_results:
-            for metric_name, scores in result['metric_scores'].items():
+            for metric_name, scores in result["metric_scores"].items():
                 if metric_name not in metric_scores:
                     metric_scores[metric_name] = []
-                if scores['score'] is not None:
-                    metric_scores[metric_name].append(scores['score'])
+                if scores["score"] is not None:
+                    metric_scores[metric_name].append(scores["score"])
 
         # Find strongest and weakest metrics
         metric_avgs = {
-            name: sum(scores) / len(scores)
-            for name, scores in metric_scores.items()
-            if scores
+            name: sum(scores) / len(scores) for name, scores in metric_scores.items() if scores
         }
 
         if metric_avgs:
@@ -328,14 +320,12 @@ class ReportGenerator:
         return insights
 
     def _generate_recommendations(
-        self,
-        summary: Dict[str, Any],
-        results: List[Dict[str, Any]]
+        self, summary: Dict[str, Any], results: List[Dict[str, Any]]
     ) -> List[str]:
         """Generate actionable recommendations based on results."""
         recommendations = []
 
-        pass_rate = summary.get('pass_rate', 0)
+        pass_rate = summary.get("pass_rate", 0)
 
         # Overall performance recommendations
         if pass_rate < 0.5:
@@ -353,27 +343,24 @@ class ReportGenerator:
             )
 
         # Metric-specific recommendations
-        metric_avgs = summary.get('metric_averages', {})
+        metric_avgs = summary.get("metric_averages", {})
         for metric_name, stats in metric_avgs.items():
-            if stats['average'] < 0.6:
+            if stats["average"] < 0.6:
                 recommendations.append(
                     f"Improve **{metric_name}** - currently averaging {stats['average']:.2f}"
                 )
 
         # Persona-specific recommendations
-        persona_stats = summary.get('persona_statistics', {})
+        persona_stats = summary.get("persona_statistics", {})
         weak_personas = [
-            name for name, stats in persona_stats.items()
-            if stats.get('pass_rate', 0) < 0.5
+            name for name, stats in persona_stats.items() if stats.get("pass_rate", 0) < 0.5
         ]
 
         if weak_personas:
-            recommendations.append(
-                f"Focus testing on personas: {', '.join(weak_personas)}"
-            )
+            recommendations.append(f"Focus testing on personas: {', '.join(weak_personas)}")
 
         # Conversation length recommendation
-        avg_turns_all = sum(r['num_turns'] for r in results) / len(results) if results else 0
+        avg_turns_all = sum(r["num_turns"] for r in results) / len(results) if results else 0
         if avg_turns_all > 20:
             recommendations.append(
                 "Conversations are lengthy. Consider improving efficiency and providing more direct answers."
