@@ -61,3 +61,6 @@ MINIMAL_EVAL_GUIDE.md
 
 my_judge.md
 my_personas.yaml
+
+
+my_agent_adapter.py

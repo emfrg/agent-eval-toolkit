@@ -38,31 +38,21 @@ async def agent_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
         Turn: The agent's response in eval framework format
     """
     # Convert conversation history to service format
-    history = [
-        {"role": turn.role, "content": turn.content}
-        for turn in turns
-    ]
+    history = [{"role": turn.role, "content": turn.content} for turn in turns]
 
     # Prepare request for the agent service
-    payload = {
-        "message": input,
-        "conversation_id": thread_id,
-        "history": history
-    }
+    payload = {"message": input, "conversation_id": thread_id, "history": history}
 
     # Call the agent service
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
-            response = await client.post(
-                "http://localhost:5555/chat",
-                json=payload
-            )
+            response = await client.post("http://localhost:5555/chat", json=payload)
 
             if response.status_code != 200:
                 error_detail = response.json().get("detail", "Unknown error")
                 return Turn(
                     role="assistant",
-                    content=f"Service error ({response.status_code}): {error_detail}"
+                    content=f"Service error ({response.status_code}): {error_detail}",
                 )
 
             # Parse response
@@ -78,18 +68,12 @@ async def agent_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
                 content=(
                     "Cannot connect to agent service. Please make sure it's running:\n"
                     "python examples/example_agent/run.py"
-                )
+                ),
             )
         except httpx.TimeoutException:
-            return Turn(
-                role="assistant",
-                content="Agent service timeout after 30 seconds"
-            )
+            return Turn(role="assistant", content="Agent service timeout after 30 seconds")
         except Exception as e:
-            return Turn(
-                role="assistant",
-                content=f"Adapter error: {str(e)}"
-            )
+            return Turn(role="assistant", content=f"Adapter error: {str(e)}")
 
 
 # Optional: Test the adapter directly
