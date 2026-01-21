@@ -5,13 +5,13 @@
 
 Stress-test AI agents with simulated user personas and LLM-as-judge evaluation. Plug in your agent, define scenarios in YAML, simulate conversations, get evaluation reports.
 
-## Demo
+<!-- ## Demo
 
 ![CLI Demo](assets/cli_demo.gif)
 
 ## Sample Output
 
-![Report Preview](assets/report_preview.png)
+![Report Preview](assets/report_preview.png) -->
 
 ---
 
@@ -264,8 +264,7 @@ async def main():
 asyncio.run(main())
 ```
 
----
-
+<!--
 ## Contributing
 
 PRs welcome! Areas of interest:
@@ -273,3 +272,4 @@ PRs welcome! Areas of interest:
 - Standardized adapters pattern
 - Standardized custom metrics
 - Better reporting/visualizations
+-->
