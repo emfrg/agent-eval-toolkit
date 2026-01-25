@@ -5,13 +5,16 @@
 
 Stress-test AI agents with simulated user personas and LLM-as-judge evaluation. Plug in your agent, define scenarios in YAML, simulate conversations, get evaluation reports.
 
-<!-- ## Demo
+## Demo
 
-![CLI Demo](assets/cli_demo.gif)
+![CLI Demo](assets/agent_simulation.gif)
 
-## Sample Output
+### Sample Report
 
-![Report Preview](assets/report_preview.png) -->
+<p>
+  <img src="assets/agent_report_pt1.png" width="49%" alt="Report Overview">
+  <img src="assets/agent_report_pt2.png" width="49%" alt="Report Details">
+</p>
 
 ---
 
@@ -34,6 +37,7 @@ pip install -e ".[service]"
 
 # for tests (optional)
 pip install -e ".[dev]"
+pytest tests/
 ```
 
 ### 2. Set up environment

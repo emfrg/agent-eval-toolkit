@@ -188,6 +188,9 @@ def simulate(
     except FileNotFoundError as e:
         console.print(f"\n[red]✗ Error:[/red] {e}")
         raise typer.Exit(1)
+    except RuntimeError:
+        # Health check failures - already printed error message, exit cleanly
+        raise typer.Exit(1)
     except Exception as e:
         console.print(f"\n[red]✗ Unexpected error:[/red] {e}")
         import traceback
