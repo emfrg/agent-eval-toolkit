@@ -77,6 +77,29 @@ This framework supports two integration patterns:
    - Direct API calls within the callback function
    - Example: `examples/mock_agent.py` (mock for demonstration)
 
+### Try the Example First
+
+Before creating your own adapter, test with the included example:
+
+**Terminal 1 - Start the example agent service:**
+```bash
+python examples/example_agent/run.py
+```
+
+**Terminal 2 - Run simulations:**
+```bash
+agent-eval-toolkit simulate --agent examples/example_agent_adapter.py
+```
+
+Then evaluate:
+```bash
+agent-eval-toolkit evaluate
+```
+
+Check `reports/` for results. See [examples/example_agent/README.md](examples/example_agent/README.md) for details.
+
+---
+
 ### Step 1: Create your agent adapter
 
 Create `my_agent_adapter.py` (following the recommended Service + Adapter pattern):
@@ -110,6 +133,8 @@ async def agent_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
 ```bash
 agent-eval-toolkit simulate --agent my_agent_adapter.py
 ```
+
+> **Note:** Your agent service must be running before you run simulations. The adapter connects to your service via HTTP.
 
 ### Step 3: Evaluate
 
