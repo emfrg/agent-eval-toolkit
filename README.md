@@ -299,12 +299,11 @@ async def main():
 asyncio.run(main())
 ```
 
-<!--
-## Contributing
+---
 
-PRs welcome! Areas of interest:
+## Roadmap
 
-- Standardized adapters pattern
-- Standardized custom metrics
-- Better reporting/visualizations
--->
+- Standardized adapter patterns
+- More built-in metrics
+- Enhanced reporting & visualizations
+- UI
