@@ -12,7 +12,7 @@ To use this adapter:
    python examples/example_agent/run.py
 
 2. Run simulations with this adapter:
-   llm-evals-starter simulate --agent examples/example_agent_adapter.py
+   agent-eval-toolkit simulate --agent examples/example_agent_adapter.py
 """
 
 import httpx

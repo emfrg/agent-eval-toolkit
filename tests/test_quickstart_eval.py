@@ -36,7 +36,7 @@ def main():
 
     if not logs_dir.exists():
         console.print(f"[red]Error: Logs directory not found: {logs_dir}[/red]")
-        console.print("Run 'llm-evals-starter quickstart' first to generate logs")
+        console.print("Run 'agent-eval-toolkit quickstart' first to generate logs")
         return 1
 
     logger = ConversationLogger(output_dir=str(logs_dir))
@@ -45,7 +45,7 @@ def main():
     jsonl_files = list(logs_dir.glob("*.jsonl"))
     if not jsonl_files:
         console.print(f"[red]No JSONL files found in {logs_dir}[/red]")
-        console.print("Run 'llm-evals-starter quickstart' first to generate logs")
+        console.print("Run 'agent-eval-toolkit quickstart' first to generate logs")
         return 1
 
     latest_file = max(jsonl_files, key=lambda p: p.stat().st_mtime)

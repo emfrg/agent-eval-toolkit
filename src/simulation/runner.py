@@ -60,6 +60,39 @@ class SimulationRunner:
             model_callback=self.agent_callback, max_concurrent=self.max_concurrent
         )
 
+    async def _check_agent_health(self) -> tuple[bool, str]:
+        """Test the agent with a simple message before running simulations.
+
+        Returns:
+            Tuple of (is_healthy, message)
+        """
+        try:
+            test_response = await self.agent_callback(
+                "Hello, this is a health check.",
+                [],  # empty turns
+                "health-check-test"
+            )
+
+            # Check for common error patterns that indicate connectivity issues
+            response_text = test_response.content.lower()
+            error_patterns = [
+                "cannot connect",
+                "connection refused",
+                "service error",
+                "timeout",
+                "not running",
+                "connect error",
+            ]
+
+            for pattern in error_patterns:
+                if pattern in response_text:
+                    return False, test_response.content
+
+            return True, "Agent responded successfully"
+
+        except Exception as e:
+            return False, str(e)
+
     async def run_simulations(
         self,
         goldens: List[ConversationalGolden],
@@ -77,9 +110,22 @@ class SimulationRunner:
             List of ConversationalTestCase objects with full conversation history
 
         Raises:
+            RuntimeError: If agent health check fails
             Exception: If simulation fails
         """
-        console.print(f"\n[bold blue]Starting simulations...[/bold blue]")
+        # Pre-flight health check
+        console.print("[cyan]Checking agent connectivity...[/cyan]")
+        is_healthy, health_message = await self._check_agent_health()
+
+        if not is_healthy:
+            console.print(f"\n[bold red]✗ Agent health check failed![/bold red]")
+            console.print(f"[red]Error:[/red] {health_message}")
+            console.print("\n[yellow]Hint:[/yellow] Make sure your agent service is running before simulations.")
+            raise RuntimeError(f"Agent health check failed: {health_message}")
+
+        console.print("[green]✓[/green] Agent is responding\n")
+
+        console.print(f"[bold blue]Starting simulations...[/bold blue]")
         console.print(f"Total conversations to simulate: {len(goldens)}")
         console.print(f"Total personas: {len(persona_configs)}")
         console.print(f"Max concurrent: {self.max_concurrent}\n")

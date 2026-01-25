@@ -1,5 +1,5 @@
 [project]
-name = "llm-evals-starter"
+name = "agent-eval-toolkit"
 version = "0.1.0"
 description = "Open-source harness for stress-testing AI agents with simulated users and LLM-as-a-judge evaluation, built on DeepEval"
 authors = [
@@ -35,7 +35,7 @@ service = [
 ]
 
 [project.scripts]
-llm-evals-starter = "src.cli:app"
+agent-eval-toolkit = "src.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["."]

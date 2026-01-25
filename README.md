@@ -5,13 +5,16 @@
 
 Stress-test AI agents with simulated user personas and LLM-as-judge evaluation. Plug in your agent, define scenarios in YAML, simulate conversations, get evaluation reports.
 
-<!-- ## Demo
+## Demo
 
-![CLI Demo](assets/cli_demo.gif)
+![CLI Demo](assets/agent_simulation.gif)
 
-## Sample Output
+### Sample Report
 
-![Report Preview](assets/report_preview.png) -->
+<p>
+  <img src="assets/agent_report_pt1.png" width="49%" alt="Report Overview">
+  <img src="assets/agent_report_pt2.png" width="49%" alt="Report Details">
+</p>
 
 ---
 
@@ -20,8 +23,8 @@ Stress-test AI agents with simulated user personas and LLM-as-judge evaluation. 
 ### 1. Install
 
 ```bash
-git clone https://github.com/yourusername/llm-evals-starter.git
-cd llm-evals-starter
+git clone https://github.com/emfrg/agent-eval-toolkit
+cd agent-eval-toolkit
 
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
@@ -34,21 +37,27 @@ pip install -e ".[service]"
 
 # for tests (optional)
 pip install -e ".[dev]"
+pytest tests/
 ```
 
 ### 2. Set up environment
 
 ```bash
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
-# Required for: User simulation + LLM-as-a-judge evaluation
-# Note: The mock agent itself makes no API calls
 ```
+
+Edit `.env` and add your OpenAI API key:
+
+```
+OPENAI_API_KEY=sk-your-key-here
+```
+
+> Required for user simulation + LLM-as-judge evaluation. The mock agent itself makes no API calls.
 
 ### 3. Try the demo
 
 ```bash
-llm-evals-starter quickstart
+agent-eval-toolkit quickstart
 ```
 
 This runs a complete simulation + evaluation with an example agent. Check `quickstart_output/` for results.
@@ -71,6 +80,29 @@ This framework supports two integration patterns:
    - All agent logic in a single file
    - Direct API calls within the callback function
    - Example: `examples/mock_agent.py` (mock for demonstration)
+
+### Try the Example First
+
+Before creating your own adapter, test with the included example:
+
+**Terminal 1 - Start the example agent service:**
+```bash
+python examples/example_agent/run.py
+```
+
+**Terminal 2 - Run simulations:**
+```bash
+agent-eval-toolkit simulate --agent examples/example_agent_adapter.py
+```
+
+Then evaluate:
+```bash
+agent-eval-toolkit evaluate
+```
+
+Check `reports/` for results. See [examples/example_agent/README.md](examples/example_agent/README.md) for details.
+
+---
 
 ### Step 1: Create your agent adapter
 
@@ -103,18 +135,20 @@ async def agent_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
 ### Step 2: Run simulations
 
 ```bash
-llm-evals-starter simulate --agent my_agent_adapter.py
+agent-eval-toolkit simulate --agent my_agent_adapter.py
 ```
+
+> **Note:** Your agent service must be running before you run simulations. The adapter connects to your service via HTTP.
 
 ### Step 3: Evaluate
 
 ```bash
-llm-evals-starter evaluate
+agent-eval-toolkit evaluate
 ```
 
 ### Step 4: Check reports
 
-Open `reports/summary.md` for results.
+Check `reports/` for evaluation results.
 
 ---
 
@@ -170,7 +204,7 @@ One finding: a "disinterested" persona took 3x more turns to produce an idea com
 ### simulate
 
 ```bash
-llm-evals-starter simulate --agent <path>
+agent-eval-toolkit simulate --agent <path>
 
 Options:
   --agent PATH         Your agent file (required)
@@ -183,7 +217,7 @@ Options:
 ### evaluate
 
 ```bash
-llm-evals-starter evaluate
+agent-eval-toolkit evaluate
 
 Options:
   --logs-dir PATH      Conversation logs (default: logs)
@@ -198,7 +232,7 @@ Runs complete demo with mock agent
 NOTE: simulated users and judge still use API calls
 
 ```bash
-llm-evals-starter quickstart
+agent-eval-toolkit quickstart
 ```
 
 ---
@@ -206,11 +240,12 @@ llm-evals-starter quickstart
 ## Project Structure
 
 ```
-llm-evals-starter/
+agent-eval-toolkit/
 ├── examples/
 │   ├── example_agent/             # Example LangGraph agent service
 │   │   ├── agent_service.py       # FastAPI application
 │   │   ├── agent.py               # LangGraph agent logic
+│   │   ├── models.py              # Pydantic request/response models
 │   │   ├── tools.py               # Agent tools
 │   │   └── run.py                 # Service launcher
 │   ├── example_agent_adapter.py   # HTTP adapter for the service
@@ -264,12 +299,11 @@ async def main():
 asyncio.run(main())
 ```
 
-<!--
-## Contributing
+---
 
-PRs welcome! Areas of interest:
+## Roadmap
 
-- Standardized adapters pattern
-- Standardized custom metrics
-- Better reporting/visualizations
--->
+- Standardized adapter patterns
+- More built-in metrics
+- Enhanced reporting & visualizations
+- UI
