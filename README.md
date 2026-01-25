@@ -241,6 +241,7 @@ agent-eval-toolkit/
 │   ├── example_agent/             # Example LangGraph agent service
 │   │   ├── agent_service.py       # FastAPI application
 │   │   ├── agent.py               # LangGraph agent logic
+│   │   ├── models.py              # Pydantic request/response models
 │   │   ├── tools.py               # Agent tools
 │   │   └── run.py                 # Service launcher
 │   ├── example_agent_adapter.py   # HTTP adapter for the service
