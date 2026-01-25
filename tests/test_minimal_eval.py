@@ -204,7 +204,7 @@ async def run_minimal_evaluation():
     print("3. Adjust personas or judge criteria and re-run")
     print()
     print("4. Scale up to full evaluation with all personas:")
-    print("   → llm-evals-starter simulate --agent examples/example_agent_adapter.py")
+    print("   → agent-eval-toolkit simulate --agent examples/example_agent_adapter.py")
     print()
 
 

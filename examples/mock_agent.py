@@ -4,9 +4,9 @@ This agent runs directly without requiring a separate service.
 It provides mock responses without any external API calls.
 
 Usage:
-    This file is used by the `llm-evals-starter quickstart` command.
+    This file is used by the `agent-eval-toolkit quickstart` command.
     It can also be used with:
-    llm-evals-starter simulate --agent examples/mock_agent.py
+    agent-eval-toolkit simulate --agent examples/mock_agent.py
 """
 
 import random

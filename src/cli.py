@@ -24,7 +24,7 @@ from src.evaluation.report import ReportGenerator
 load_dotenv()
 
 app = typer.Typer(
-    name="llm-evals-starter",
+    name="agent-eval-toolkit",
     help="AI Agent Conversation Simulator & Evaluator - Built on DeepEval",
     add_completion=False,
 )
@@ -120,8 +120,8 @@ def simulate(
     """Run conversation simulations with your agent.
 
     Example:
-        llm-evals-starter simulate --agent examples/example_agent.py
-        llm-evals-starter simulate --agent my_agent.py
+        agent-eval-toolkit simulate --agent examples/example_agent.py
+        agent-eval-toolkit simulate --agent my_agent.py
     """
     console.print(
         Panel.fit(
@@ -222,7 +222,7 @@ def evaluate(
     3. Generates JSON and Markdown reports
 
     Example:
-        llm-evals-starter evaluate --logs-dir logs --threshold 0.7
+        agent-eval-toolkit evaluate --logs-dir logs --threshold 0.7
     """
     console.print(
         Panel.fit(
@@ -317,7 +317,7 @@ def quickstart(
     Perfect for testing the system without setting up a real agent!
 
     Example:
-        llm-evals-starter quickstart
+        agent-eval-toolkit quickstart
     """
     console.print(
         Panel.fit(
@@ -339,7 +339,7 @@ def quickstart(
         if not personas_path.exists():
             console.print(f"\n[yellow]No personas configuration found at {personas_path}[/yellow]")
             console.print("Please create config/personas.yaml first or use:")
-            console.print("  llm-evals-starter validate-config")
+            console.print("  agent-eval-toolkit validate-config")
             raise typer.Exit(1)
 
         # Step 1: Simulate
@@ -417,7 +417,7 @@ def validate_config(
     """Validate persona configuration file.
 
     Example:
-        llm-evals-starter validate-config config/personas.yaml
+        agent-eval-toolkit validate-config config/personas.yaml
     """
     console.print(f"[cyan]Validating configuration:[/cyan] {config}")
 

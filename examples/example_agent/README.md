@@ -112,7 +112,7 @@ python examples/example_agent_adapter.py
 
 ```bash
 # Run simulations using the adapter
-llm-evals-starter simulate \
+agent-eval-toolkit simulate \
   --agent examples/example_agent_adapter.py \
   --config config/personas.yaml
 ```

@@ -20,8 +20,8 @@ Stress-test AI agents with simulated user personas and LLM-as-judge evaluation. 
 ### 1. Install
 
 ```bash
-git clone https://github.com/yourusername/llm-evals-starter.git
-cd llm-evals-starter
+git clone https://github.com/emfrg/agent-eval-toolkit
+cd agent-eval-toolkit
 
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
@@ -40,15 +40,20 @@ pip install -e ".[dev]"
 
 ```bash
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
-# Required for: User simulation + LLM-as-a-judge evaluation
-# Note: The mock agent itself makes no API calls
 ```
+
+Edit `.env` and add your OpenAI API key:
+
+```
+OPENAI_API_KEY=sk-your-key-here
+```
+
+> Required for user simulation + LLM-as-judge evaluation. The mock agent itself makes no API calls.
 
 ### 3. Try the demo
 
 ```bash
-llm-evals-starter quickstart
+agent-eval-toolkit quickstart
 ```
 
 This runs a complete simulation + evaluation with an example agent. Check `quickstart_output/` for results.
@@ -103,18 +108,18 @@ async def agent_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
 ### Step 2: Run simulations
 
 ```bash
-llm-evals-starter simulate --agent my_agent_adapter.py
+agent-eval-toolkit simulate --agent my_agent_adapter.py
 ```
 
 ### Step 3: Evaluate
 
 ```bash
-llm-evals-starter evaluate
+agent-eval-toolkit evaluate
 ```
 
 ### Step 4: Check reports
 
-Open `reports/summary.md` for results.
+Check `reports/` for evaluation results.
 
 ---
 
@@ -170,7 +175,7 @@ One finding: a "disinterested" persona took 3x more turns to produce an idea com
 ### simulate
 
 ```bash
-llm-evals-starter simulate --agent <path>
+agent-eval-toolkit simulate --agent <path>
 
 Options:
   --agent PATH         Your agent file (required)
@@ -183,7 +188,7 @@ Options:
 ### evaluate
 
 ```bash
-llm-evals-starter evaluate
+agent-eval-toolkit evaluate
 
 Options:
   --logs-dir PATH      Conversation logs (default: logs)
@@ -198,7 +203,7 @@ Runs complete demo with mock agent
 NOTE: simulated users and judge still use API calls
 
 ```bash
-llm-evals-starter quickstart
+agent-eval-toolkit quickstart
 ```
 
 ---
@@ -206,7 +211,7 @@ llm-evals-starter quickstart
 ## Project Structure
 
 ```
-llm-evals-starter/
+agent-eval-toolkit/
 ├── examples/
 │   ├── example_agent/             # Example LangGraph agent service
 │   │   ├── agent_service.py       # FastAPI application
