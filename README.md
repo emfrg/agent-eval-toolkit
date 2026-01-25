@@ -1,12 +1,17 @@
-# LLM Evals Starter
-
-> **Stress-test AI agents with simulated users and LLM-as-a-judge evaluation**
+# AI Agent Evaluation and Simulation Toolkit
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![DeepEval](https://img.shields.io/badge/built%20on-DeepEval-brightgreen)](https://deepeval.com/)
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Plug in your AI agent → Simulate realistic conversations → Get evaluation reports
+Stress-test AI agents with simulated user personas and LLM-as-judge evaluation. Plug in your agent, define scenarios in YAML, simulate conversations, get evaluation reports.
+
+<!-- ## Demo
+
+![CLI Demo](assets/cli_demo.gif)
+
+## Sample Output
+
+![Report Preview](assets/report_preview.png) -->
 
 ---
 
@@ -113,31 +118,6 @@ Open `reports/summary.md` for results.
 
 ---
 
-## Examples
-
-### Test with the example adapter
-
-```bash
-# 1. Start the example agent service
-python examples/example_agent/run.py
-
-# 2. Run simulations (in another terminal)
-llm-evals-starter simulate --agent examples/example_agent_adapter.py
-```
-
-This demonstrates the recommended architecture:
-
-- **Agent Service** (`examples/example_agent/`) - LangGraph agent with tool calling over HTTP
-- **Adapter** (`example_agent_adapter.py`) - HTTP client that converts service responses to Turn objects
-
-### Use your own agent
-
-```bash
-llm-evals-starter simulate --agent my_agent_adapter.py
-```
-
----
-
 ## Customization
 
 ### Define your personas
@@ -174,6 +154,14 @@ evaluator = JudgeEvaluator(
 ```
 
 See [src/metrics/custom_examples.py](src/metrics/custom_examples.py) for examples.
+
+<!--
+## Case Study
+
+We used this toolkit internally to evaluate a brainstorming agent before deployment.
+
+One finding: a "disinterested" persona took 3x more turns to produce an idea compared to engaged users. This led us to adjust the agent to be more proactive when it detects low engagement — a fix we wouldn't have caught without simulation.
+-->
 
 ---
 
@@ -276,8 +264,7 @@ async def main():
 asyncio.run(main())
 ```
 
----
-
+<!--
 ## Contributing
 
 PRs welcome! Areas of interest:
@@ -285,19 +272,4 @@ PRs welcome! Areas of interest:
 - Standardized adapters pattern
 - Standardized custom metrics
 - Better reporting/visualizations
-
----
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file.
-
----
-
-**Ready to test your AI agent?**
-
-```bash
-llm-evals-starter quickstart
-```
-
-Star ⭐ this repo if you find it useful!
+-->
