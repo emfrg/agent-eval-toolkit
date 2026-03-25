@@ -19,6 +19,9 @@ from src.simulation.runner import SimulationRunner
 from src.core.logging import ConversationLogger
 from src.evaluation.judge import JudgeEvaluator
 from src.evaluation.report import ReportGenerator
+from src.redteam.config import load_redteam_config
+from src.redteam.runner import RedTeamRunner
+from src.redteam.report import RedTeamReporter
 
 # Load environment variables
 load_dotenv()
@@ -407,6 +410,126 @@ def quickstart(
         console.print(f"\n[red]✗ Unexpected error:[/red] {e}")
         import traceback
 
+        console.print(traceback.format_exc())
+        raise typer.Exit(1)
+
+
+@app.command()
+def redteam(
+    agent: str = typer.Option(
+        ...,
+        "--agent",
+        "-a",
+        help="Path to your agent file (e.g. examples/mock_agent.py or examples/example_agent_adapter.py)",
+    ),
+    config: str = typer.Option(
+        "config/redteam_config.yaml",
+        "--config",
+        "-c",
+        help="Path to red team YAML configuration file",
+    ),
+    output_dir: str = typer.Option(
+        "reports/redteam",
+        "--output",
+        "-o",
+        help="Directory to save JSON and Markdown reports",
+    ),
+    attacks_per_type: Optional[int] = typer.Option(
+        None,
+        "--attacks-per-type",
+        "-n",
+        help="Override number of adversarial probes per vulnerability type",
+    ),
+    simulator_model: Optional[str] = typer.Option(
+        None,
+        "--simulator-model",
+        help="Override LLM used to generate adversarial probes (e.g. gpt-4o-mini)",
+    ),
+    eval_model: Optional[str] = typer.Option(
+        None,
+        "--eval-model",
+        help="Override LLM used to judge vulnerability (e.g. gpt-4o)",
+    ),
+):
+    """Run adversarial red team scans against your agent using deepteam.
+
+    This command extends the existing eval pipeline with a new category of
+    conversations (adversarial) and a new category of scoring (security).
+    The agent adapter and reporting pipeline carry over from the main eval flow.
+
+    This command:
+    1. Loads red team config (vulnerabilities, attacks, purpose)
+    2. Generates adversarial probes via deepteam
+    3. Runs the probes against your agent callback
+    4. Generates JSON and Markdown vulnerability reports
+
+    Examples:
+        agent-eval-toolkit redteam --agent examples/mock_agent.py
+        agent-eval-toolkit redteam --agent examples/example_agent_adapter.py
+        agent-eval-toolkit redteam --agent my_agent.py --attacks-per-type 10
+    """
+    console.print(
+        Panel.fit(
+            "[bold red]Red Team Scan[/bold red]\n"
+            "Adversarial testing with deepteam",
+            border_style="red",
+        )
+    )
+
+    try:
+        # Load red team config
+        console.print(f"\n[cyan]Loading red team config:[/cyan] {config}")
+        rt_config = load_redteam_config(config)
+
+        # Apply CLI overrides
+        if attacks_per_type is not None:
+            rt_config.attacks_per_type = attacks_per_type
+        if simulator_model is not None:
+            rt_config.simulator_model = simulator_model
+        if eval_model is not None:
+            rt_config.evaluation_model = eval_model
+        rt_config.output_dir = output_dir
+
+        console.print(f"[green]✓[/green] Config loaded")
+
+        # Load agent callback (same pattern as simulate command)
+        console.print(f"\n[cyan]Loading agent...[/cyan]")
+        agent_callback = load_agent_callback(agent)
+
+        # Run the scan
+        runner = RedTeamRunner(config=rt_config)
+        results = runner.run(agent_callback=agent_callback)
+
+        # Print summary table
+        reporter = RedTeamReporter(output_dir=output_dir)
+        reporter.print_summary_table(results)
+
+        # Print headline numbers
+        safety_rate = results["safety_rate"]
+        errored = results.get("errored", 0)
+        headline = (
+            f"[bold]Safety rate:[/bold] {safety_rate * 100:.1f}%  "
+            f"({results['safe']} blocked / {results['vulnerable']} vulnerable"
+        )
+        if errored:
+            headline += f" / {errored} errored"
+        headline += f" / {results['total_tests']} total)"
+        console.print(headline)
+
+        # Generate reports
+        reporter.generate_reports(results)
+
+        console.print("[bold green]✨ Red team scan complete![/bold green]")
+
+    except FileNotFoundError as e:
+        console.print(f"\n[red]✗ Error:[/red] {e}")
+        raise typer.Exit(1)
+    except RuntimeError as e:
+        console.print(f"\n[red]✗ Error:[/red] {e}")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"\n[red]✗ Unexpected error:[/red] {e}")
+        import traceback
         console.print(traceback.format_exc())
         raise typer.Exit(1)
 
