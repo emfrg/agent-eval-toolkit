@@ -33,7 +33,7 @@ class RedTeamConfig:
     attacks_per_type: int = 5
     max_concurrency: int = 4
     output_dir: str = "reports/redteam"
-    simulator_model: str = "gpt-4o"
+    simulator_model: str = "gpt-4o-mini"
     evaluation_model: str = "gpt-4o"
 
 

@@ -64,3 +64,5 @@ my_personas.yaml
 
 
 my_agent_adapter.py
+config/redteam_appointment_agent.yaml
+examples/appointment_agent_adapter.py

@@ -48,7 +48,7 @@ max_concurrency: 4
 output_dir: reports/redteam
 
 # LLM used to generate adversarial probes
-simulator_model: gpt-4o
+simulator_model: gpt-4o-mini
 
 # LLM used to judge whether the agent was vulnerable
 evaluation_model: gpt-4o

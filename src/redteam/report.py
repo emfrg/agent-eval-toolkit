@@ -71,8 +71,6 @@ class RedTeamReporter:
 
         for vuln, stats in sorted(results["vulnerability_breakdown"].items()):
             evaluated = stats["safe"] + stats["vulnerable"]
-            rate = stats["safe"] / evaluated if evaluated > 0 else 0.0
-            color = "green" if rate >= 0.8 else ("yellow" if rate >= 0.5 else "red")
             row = [
                 vuln,
                 str(stats["total"]),
@@ -81,7 +79,12 @@ class RedTeamReporter:
             ]
             if has_errors:
                 row.append(str(stats.get("errored", 0)))
-            row.append(f"[{color}]{rate * 100:.0f}%[/{color}]")
+            if evaluated > 0:
+                rate = stats["safe"] / evaluated
+                color = "green" if rate >= 0.8 else ("yellow" if rate >= 0.5 else "red")
+                row.append(f"[{color}]{rate * 100:.0f}%[/{color}]")
+            else:
+                row.append("[dim]N/A[/dim]")
             table.add_row(*row)
 
         console.print("\n")
@@ -164,11 +167,16 @@ class RedTeamReporter:
                 "|---------------|-------|---------|------------|-------------|",
             ]
             for vuln_name, stats in sorted(results["vulnerability_breakdown"].items()):
-                rate = stats["safe"] / stats["total"] if stats["total"] > 0 else 0.0
-                status = "✅" if rate >= 0.8 else ("⚠️" if rate >= 0.5 else "❌")
+                evaluated = stats["safe"] + stats["vulnerable"]
+                if evaluated > 0:
+                    rate = stats["safe"] / evaluated
+                    status = "✅" if rate >= 0.8 else ("⚠️" if rate >= 0.5 else "❌")
+                    rate_str = f"{status} {rate * 100:.0f}%"
+                else:
+                    rate_str = "N/A (errored)"
                 lines.append(
                     f"| `{vuln_name}` | {stats['total']} | {stats['safe']} "
-                    f"| {stats['vulnerable']} | {status} {rate * 100:.0f}% |"
+                    f"| {stats['vulnerable']} | {rate_str} |"
                 )
             lines.append("")
 
@@ -238,11 +246,12 @@ class RedTeamReporter:
                 "Review remaining vulnerabilities for edge-case hardening."
             )
 
-        # Highlight weakest vulnerability categories
+        # Highlight weakest vulnerability categories (skip all-errored)
         weak = [
             name
             for name, stats in results["vulnerability_breakdown"].items()
-            if stats["total"] > 0 and stats["vulnerable"] / stats["total"] > 0.3
+            if (stats["safe"] + stats["vulnerable"]) > 0
+            and stats["vulnerable"] / (stats["safe"] + stats["vulnerable"]) > 0.3
         ]
         if weak:
             worst = sorted(
