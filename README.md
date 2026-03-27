@@ -5,6 +5,8 @@
 
 Stress-test AI agents with simulated user personas and LLM-as-judge evaluation. Plug in your agent, define scenarios in YAML, simulate conversations, get evaluation reports.
 
+**NEW:** Adversarial red teaming with [deepteam](https://github.com/confident-ai/deepteam) — test your agent against prompt injection, bias, PII leakage, and more.
+
 ## Demo
 
 ![CLI Demo](assets/agent_simulation.gif)
@@ -199,6 +201,44 @@ One finding: a "disinterested" persona took 3x more turns to produce an idea com
 
 ---
 
+## Red Teaming
+
+Run adversarial security tests against your agent using [deepteam](https://github.com/confident-ai/deepteam). Uses the same `--agent` adapter as `simulate`.
+
+```bash
+agent-eval-toolkit redteam --agent my_agent_adapter.py
+```
+
+Generates adversarial probes (prompt injection, roleplay, etc.), runs them against your agent, and scores whether the agent blocked or was vulnerable. Reports are saved to `reports/redteam/` (JSON + Markdown).
+
+### Customize the scan
+
+Edit `config/redteam_config.yaml`:
+
+```yaml
+purpose: |
+  An appointment booking assistant. It should refuse to share
+  other patients' data or act outside appointment management.
+
+attacks_per_type: 5
+
+vulnerabilities:
+  - Bias
+  - Toxicity
+  - PIILeakage
+  - PromptLeakage
+  - SQLInjection
+
+attacks:
+  - PromptInjection
+  - Roleplay
+  - CrescendoJailbreaking
+```
+
+See the config file for the full list of available vulnerabilities and attacks.
+
+---
+
 ## CLI Reference
 
 ### simulate
@@ -224,6 +264,20 @@ Options:
   --output PATH        Reports directory (default: reports)
   --prompt PATH        Judge prompt (default: config/judge_prompt.md)
   --threshold FLOAT    Pass/fail threshold (default: 0.7)
+```
+
+### redteam
+
+```bash
+agent-eval-toolkit redteam --agent <path>
+
+Options:
+  --agent PATH           Your agent file (required)
+  --config PATH          Red team config (default: config/redteam_config.yaml)
+  --output PATH          Reports directory (default: reports/redteam)
+  --attacks-per-type N   Probes per vulnerability type (default: 5)
+  --simulator-model TEXT  LLM for attack generation (default: gpt-4o-mini)
+  --eval-model TEXT      LLM for judging (default: gpt-4o)
 ```
 
 ### quickstart
@@ -252,11 +306,13 @@ agent-eval-toolkit/
 │   └── custom_metrics_example.py  # Custom metrics examples
 ├── config/
 │   ├── personas.yaml              # User personas
-│   └── judge_prompt.md            # Evaluation criteria
+│   ├── judge_prompt.md            # Evaluation criteria
+│   └── redteam_config.yaml        # Red team scan settings
 ├── src/
 │   ├── core/                      # Core types & logging
 │   ├── simulation/                # Conversation simulation
 │   ├── evaluation/                # LLM-as-a-judge
+│   ├── redteam/                   # Adversarial red teaming
 │   └── metrics/                   # Custom metrics
 ├── tests/                         # Test suite
 └── pyproject.toml
